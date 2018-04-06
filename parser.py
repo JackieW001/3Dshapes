@@ -14,6 +14,7 @@ The file follows the following format:
 	    takes 5 arguemnts (cx, cy, cz, r1, r2)
          box: add a rectangular prism to the edge matrix - 
 	    takes 6 arguemnts (x, y, z, width, height, depth)	    
+
 	 circle: add a circle to the edge matrix - 
 	    takes 3 arguments (cx, cy, r)
 	 hermite: add a hermite curve to the edge matrix -
@@ -32,7 +33,6 @@ The file follows the following format:
 	 rotate: create a rotation matrix,
 	    then multiply the transform matrix by the rotation matrix -
 	    takes 2 arguments (axis, theta) axis should be x, y or z
-         clear: clear the edge matrix of points
 	 apply: apply the current transformation matrix to the 
 	    edge matrix
 	 display: draw the lines of the edge matrix to the screen
@@ -41,6 +41,7 @@ The file follows the following format:
 	    save the screen to a file -
 	    takes 1 argument (file name)
 	 quit: end parsing
+
 See the file script for an example of the file format
 """
 ARG_COMMANDS = [ 'line', 'scale', 'move', 'rotate', 'save', 'circle', 'bezier', 'hermite', 'box', 'sphere', 'torus' ]
@@ -51,9 +52,7 @@ def parse_file( fname, edges, transform, screen, color ):
     lines = f.readlines()
 
     step = 100
-    step_3d = 20
     c = 0
-
     while c < len(lines):
         line = lines[c].strip()
         #print ':' + line + ':'
@@ -61,27 +60,23 @@ def parse_file( fname, edges, transform, screen, color ):
         if line in ARG_COMMANDS:
             c+= 1
             args = lines[c].strip().split(' ')
-            #print 'args\t' + str(args)
 
-        if line == 'sphere':
-            #print 'SPHERE\t' + str(args)
-            add_sphere(edges,
-                       float(args[0]), float(args[1]), float(args[2]),
-                       float(args[3]), step_3d)
-
-        elif line == 'torus':
-            #print 'TORUS\t' + str(args)
-            add_torus(edges,
-                      float(args[0]), float(args[1]), float(args[2]),
-                      float(args[3]), float(args[4]), step_3d)
-
-        elif line == 'box':
-            #print 'BOX\t' + str(args)
+        if line == 'box':
             add_box(edges,
                     float(args[0]), float(args[1]), float(args[2]),
                     float(args[3]), float(args[4]), float(args[5]))
 
-        elif line == 'circle':
+        if line == 'sphere':
+            generate_sphere(edges,
+                            float(args[0]), float(args[1]), float(args[2]),
+                            float(args[3]), 50)
+            
+        if line == 'torus':
+            generate_torus(edges,
+                           float(args[0]), float(args[1]), float(args[2]),
+                           float(args[3]), float(args[4]), 100)
+            
+        if line == 'circle':
             #print 'CIRCLE\t' + str(args)
             add_circle(edges,
                        float(args[0]), float(args[1]), float(args[2]),
@@ -125,22 +120,24 @@ def parse_file( fname, edges, transform, screen, color ):
                 t = make_rotZ(theta)
             matrix_mult(t, transform)
                 
-        elif line == 'clear':
-            edges = []
-            
         elif line == 'ident':
             ident(transform)
 
         elif line == 'apply':
             matrix_mult( transform, edges )
 
+        elif line == 'clear':
+            edges = new_matrix()
+
         elif line == 'display' or line == 'save':
             clear_screen(screen)
-            draw_polygons(edges, screen, color)
+            draw_lines(edges, screen, color)
 
             if line == 'display':
                 display(screen)
             else:
                 save_extension(screen, args[0])
+        else:
+            pass
             
         c+= 1
